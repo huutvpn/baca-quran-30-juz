@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baca Al-Qur'an 30 Juz</title>
+
+<style>
+body{
+    font-family: serif;
+    background:#020617;
+    color:#f8fafc;
+    text-align:center;
+    padding:15px;
+}
+.container{
+    max-width:900px;
+    margin:auto;
+}
+select, button{
+    padding:10px;
+    border-radius:8px;
+    border:none;
+    margin:5px;
+    font-size:15px;
+}
+.ayat{
+    background:#020617;
+    border:1px solid #1e293b;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:12px;
+    font-size:26px;
+    line-height:2.2;
+    direction:rtl;
+}
+.info{
+    font-size:14px;
+    color:#38bdf8;
+    direction:ltr;
+    margin-top:8px;
+}
+.audio-btn{
+    background:#16a34a;
+    color:#fff;
+    cursor:pointer;
+    margin-top:10px;
+}
+footer{
+    margin-top:20px;
+    font-size:12px;
+    opacity:.7;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+    <h2>📖 Baca Al-Qur'an 30 Juz</h2>
+    <p>Dengan Audio Murattal</p>
+
+    <select id="juz" onchange="loadJuz()">
+        <option value="">-- Pilih Juz --</option>
+        <script>
+            for(let i=1;i<=30;i++){
+                document.write(`<option value="${i}">Juz ${i}</option>`);
+            }
+        </script>
+    </select>
+
+    <br>
+    <button onclick="playAll()">▶️ Putar Full Juz</button>
+    <button onclick="stopAudio()">⏹ Stop</button>
+
+    <div id="quran"></div>
+
+    <footer>© 2026 • Baca Qur'an + Audio</footer>
+</div>
+
+<audio id="player" controls style="width:100%; margin-top:15px;"></audio>
+
+<script>
+let audioList = [];
+let currentIndex = 0;
+const player = document.getElementById("player");
+
+// Qari: Mishary Alafasy (GLOBAL AYAH NUMBER)
+const AUDIO_BASE = "https://cdn.islamic.network/quran/audio/128/ar.alafasy";
+
+async function loadJuz(){
+    const juz = document.getElementById("juz").value;
+    if(!juz) return;
+
+    document.getElementById("quran").innerHTML = "⏳ Memuat ayat...";
+    audioList = [];
+    currentIndex = 0;
+
+    const res = await fetch(`https://api.alquran.cloud/v1/juz/${juz}/quran-uthmani`);
+    const data = await res.json();
+
+    let html = "";
+    data.data.ayahs.forEach(a=>{
+        const audioUrl = `${AUDIO_BASE}/${a.number}.mp3`;
+        audioList.push(audioUrl);
+
+        html += `
+            <div class="ayat">
+                ${a.text}
+                <div class="info">QS ${a.surah.number}:${a.numberInSurah}</div>
+                <button class="audio-btn" onclick="playAyat('${audioUrl}')">
+                    🔊 Putar Ayat
+                </button>
+            </div>
+        `;
+    });
+
+    document.getElementById("quran").innerHTML = html;
+}
+
+function playAyat(url){
+    player.src = url;
+    player.play();
+}
+
+function playAll(){
+    if(audioList.length === 0){
+        alert("Pilih juz dulu");
+        return;
+    }
+    player.src = audioList[currentIndex];
+    player.play();
+
+    player.onended = ()=>{
+        currentIndex++;
+        if(currentIndex < audioList.length){
+            player.src = audioList[currentIndex];
+            player.play();
+        }
+    };
+}
+
+function stopAudio(){
+    player.pause();
+    player.currentTime = 0;
+}
+</script>
+</body>
+</html>
